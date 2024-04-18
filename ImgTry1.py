@@ -5,12 +5,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Read image from disk.
-img = cv2.imread('Ganesh.jpg')
+img = cv2.imread('gs1.jpg')
 # Convert BGR image to RGB
 image_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
 # Apply Canny edge detection
-edges = cv2.Canny(image=image_rgb, threshold1=100, threshold2=700)
+edges = cv2.Canny(image=image_rgb, threshold1=300, threshold2=800)
 
 # Create subplots
 fig, axs = plt.subplots(1, 2, figsize=(7, 4))
