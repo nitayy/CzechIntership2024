@@ -8,7 +8,7 @@ def create_lut(x, y):
 
 # Define the curve you want to apply (you can customize this)
 # For example, let's create a simple S-curve
-x = np.array([0, 64, 128, 192, 255])
+x = np.array([0, 4, 128, 192, 255])
 y = np.array([0, 70, 128, 185, 255])
 
 # Create LUT for each color channel

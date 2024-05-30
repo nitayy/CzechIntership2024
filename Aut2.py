@@ -13,13 +13,23 @@ def apply_curve(image, curve):
     return cv2.LUT(image, curve)
 
 
+def save_processed_images(image, base_filename, count):
+    """Saves the processed image."""
+    cv2.imwrite(f"{base_filename}-output{count}.jpg", image)
+
+
+def save_contour_images(image, contours, base_filename):
+    """Saves each contour as a separate image on the processed image."""
+    processed_image = image.copy()
+    for i, contour in enumerate(contours):
+        cv2.drawContours(processed_image, [contour], -1, (255, 255, 255), thickness=cv2.FILLED)
+        cv2.imwrite(f"{base_filename}-output{i + 1}.jpg", processed_image)
+
+
 def process_image(image, luts, edge_bounds):
-    """Processes the image with different LUTs and edge bounds, finds contours, and returns the maximum number of contours."""
-    max_contours = 0
-    best_image = None
-    best_lut = None
-    best_edges = (0, 0)
+    """Processes the image with different LUTs and edge bounds, saves the processed images."""
     height, width = image.shape[:2]
+    count = 0
 
     for lut in luts:
         output_image = image.copy()
@@ -39,28 +49,25 @@ def process_image(image, luts, edge_bounds):
 
         for low, high in edge_bounds:
             edges = cv2.Canny(blurred_image, low, high)
-            contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            contours, _ = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
             filtered_contours = [cnt for cnt in contours if cv2.contourArea(cnt) > 1200]
 
-            if len(filtered_contours) > max_contours:
-                max_contours = len(filtered_contours)
-                best_image = output_image.copy()
-                best_lut = lut
-                best_edges = (low, high)
-
-    return best_image, max_contours, best_lut, best_edges
+            if filtered_contours:
+                count += 1
+                save_processed_images(output_image, f"image2-{count}-processed", count)
+                save_contour_images(output_image, filtered_contours, f"image2-{count}-contours")
 
 
 # Parameters
-dots = 10
-positions = 100
+dots = 3
+positions = 4
 edge_array = 6
 
 # Define the points for LUTs
 points = [
-    (np.array([0, 128, 255]), np.array([0, 180, 255])),  # Curve 1
-    (np.array([0, 64, 192, 255]), np.array([0, 80, 200, 255])),  # Curve 2
-    (np.array([0, 255]), np.array([0, 255]))  # Identity Curve
+    (np.linspace(0, 255, dots), np.linspace(0, 255, dots)),  # Curve 1
+    (np.linspace(0, 255, dots), np.linspace(0, 255, dots)),  # Curve 2
+    (np.linspace(0, 255, dots), np.linspace(0, 255, dots)),  # Curve 3
 ]
 
 # Create LUTs
@@ -71,19 +78,10 @@ edge_bounds = [(low, high) for low in np.linspace(0, 255, edge_array) for high i
                low < high]
 
 # Load an image
-image = cv2.imread('./tests/test9-org.jpg')
+image = cv2.imread('test2.jpg')
 
 # Process the image
-best_image, max_contours, best_lut, best_edges = process_image(image, luts, edge_bounds)
+process_image(image, luts, edge_bounds)
 
-# Save the image with the maximum number of contours
-cv2.imwrite('best_image_with_contours.jpg', best_image)
-
-# Show the results
-cv2.imshow('Best Image with Contours', best_image)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-
-print(f"Max contours: {max_contours}")
-print(f"Best LUT: {best_lut}")
-print(f"Best edges: {best_edges}")
+# Inform the user about the process completion
+print("Processed images saved successfully.")
